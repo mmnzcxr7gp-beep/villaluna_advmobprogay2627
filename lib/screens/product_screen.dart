@@ -12,13 +12,16 @@ class ProductScreen extends StatefulWidget {
   State<ProductScreen> createState() => _ProductScreenState();
 }
 
-class _ProductScreenState extends State<ProductScreen> {
+class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveClientMixin {
   late final Future<List<Product>> _productsFuture;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   static const Color primaryBlue = Color(0xFF354898);
   static const Color accentGold = Color(0xFFFFB800);
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -63,6 +66,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SafeArea(
       child: SingleChildScrollView(
         child: Column(

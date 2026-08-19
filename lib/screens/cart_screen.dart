@@ -19,7 +19,7 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class _CartScreenState extends State<CartScreen> with AutomaticKeepAliveClientMixin {
   final CartService _cartService = CartService();
 
   static const Color primaryBlue = Color(0xFF354898);
@@ -31,18 +31,19 @@ class _CartScreenState extends State<CartScreen> {
   bool _isConfirmingOrder = false;
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void initState() {
     super.initState();
-    _loadCart();
+    _cartFuture = _cartService.getCartByUserId(widget.userId);
   }
 
   // Enhancement 3: Cart by user ID and add-to-cart integration
   void _loadCart() {
     setState(() {
-      _cartFuture = _cartService.getCartByUserId(widget.userId).then((cart) {
-        _currentCart = cart;
-        return cart;
-      });
+      _currentCart = null;
+      _cartFuture = _cartService.getCartByUserId(widget.userId);
     });
   }
 
@@ -93,7 +94,7 @@ class _CartScreenState extends State<CartScreen> {
     final int itemCount = _currentCart!.products.length;
 
     // Simulate API order confirmation delay
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (!mounted) return;
 
@@ -201,6 +202,7 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF121624) : const Color(0xFFF7F8FC);
     final cardColor = isDark ? const Color(0xFF1E2438) : Colors.white;
@@ -211,6 +213,11 @@ class _CartScreenState extends State<CartScreen> {
         child: FutureBuilder<Cart>(
           future: _cartFuture,
           builder: (context, snapshot) {
+            // Save received data into _currentCart
+            if (snapshot.hasData && _currentCart == null) {
+              _currentCart = snapshot.data;
+            }
+
             // 1. Loading State
             if (snapshot.connectionState == ConnectionState.waiting && _currentCart == null) {
               return const Center(
