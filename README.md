@@ -30,6 +30,10 @@ In this activity, the application renders API data from the DummyJSON products e
 - This activity implements the **Model-View-Provider (MVP / Clean Architecture)** design pattern for Flutter applications.
 - Isolating business logic into dedicated directories (`constants/`, `models/`, `providers/`, `screens/`, `services/`, `widgets/`) improves maintainability, scalability, and code readability.
 
+### Personal Reflection & Learning Takeaway
+
+solod dami ko natutunan
+
 ---
 
 ## Lab Activity 3: API Part II
@@ -112,3 +116,9 @@ Lab Activity 3 extends the application by integrating shopping cart capabilities
 | **Modified** | `lib/screens/home_screen.dart` | Added Cart tab, moved Chat to FAB with conditional visibility |
 | **Modified** | `lib/main.dart` | Registered `/cart` route |
 | **Modified** | `README.md` | Added Lab Activity 3 documentation |
+
+---
+
+### 10. Personal Reflection & Learning Takeaway
+
+same as well sa lab act 2 ang dami ko parinnatutunan hahaha
