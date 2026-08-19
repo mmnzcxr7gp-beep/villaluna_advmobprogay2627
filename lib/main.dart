@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
 // screens
+import 'screens/cart_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 
@@ -45,6 +46,7 @@ class VillalunaAdvMobProg extends StatelessWidget {
             initialRoute: '/home',
             routes: {
               '/home': (context) => const HomeScreen(),
+              '/cart': (context) => const CartScreen(),
               '/settings': (context) => const SettingsScreen(),
             },
           );

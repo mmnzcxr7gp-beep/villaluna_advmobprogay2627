@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/product_model.dart';
+import '../services/cart_service.dart';
 import '../widgets/custom_text.dart';
 
-class ProductDetailsScreen extends StatelessWidget {
+class ProductDetailsScreen extends StatefulWidget {
   final Product product;
 
   const ProductDetailsScreen({
     super.key,
     required this.product,
   });
+
+  @override
+  State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+}
+
+class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
+  final CartService _cartService = CartService();
+  int _quantity = 1;
+  bool _isAddingToCart = false;
 
   Widget _buildStarRating(double rating, {double iconSize = 16}) {
     int fullStars = rating.floor();
@@ -40,8 +50,66 @@ class ProductDetailsScreen extends StatelessWidget {
     );
   }
 
+  // Enhancement 3: Cart by user ID and add-to-cart integration
+  Future<void> _handleAddToCart() async {
+    if (_isAddingToCart) return; // Prevent duplicate API submissions
+
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    try {
+      // Add product to cart with user ID 1
+      await _cartService.addToCart(
+        userId: 1,
+        productId: widget.product.id,
+        quantity: _quantity,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Added $_quantity x ${widget.product.title} to cart!',
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'View Cart',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.pushNamed(context, '/cart');
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to add to cart: ${e.toString().replaceAll('Exception: ', '')}',
+            style: const TextStyle(fontFamily: 'Poppins'),
+          ),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAddingToCart = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final product = widget.product;
+
     return Scaffold(
       appBar: AppBar(
         title: CustomText(
@@ -150,6 +218,78 @@ class ProductDetailsScreen extends StatelessWidget {
               CustomText(
                 text: product.description,
                 fontSize: 14.sp,
+              ),
+
+              SizedBox(height: 20.h),
+
+              // Quantity Selector and Add-to-Cart Controls
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12.r),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          CustomText(
+                            text: 'Quantity:',
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          SizedBox(width: 8.w),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: _quantity > 1
+                                ? () {
+                                    setState(() {
+                                      _quantity--;
+                                    });
+                                  }
+                                : null,
+                          ),
+                          CustomText(
+                            text: '$_quantity',
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            onPressed: () {
+                              setState(() {
+                                _quantity++;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _isAddingToCart ? null : _handleAddToCart,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                        ),
+                        icon: _isAddingToCart
+                            ? SizedBox(
+                                width: 16.sp,
+                                height: 16.sp,
+                                child: const CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.shopping_cart_outlined),
+                        label: CustomText(
+                          text: _isAddingToCart ? 'Adding...' : 'Add to Cart',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
 
               if (product.reviews.isNotEmpty) ...[
