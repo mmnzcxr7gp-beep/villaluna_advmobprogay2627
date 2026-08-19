@@ -16,6 +16,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
+  static const Color primaryBlue = Color(0xFF354898);
+  static const Color accentGold = Color(0xFFFFB800);
+
   final PageController _pageController = PageController();
 
   @override
@@ -49,8 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.15),
-                        child: Icon(Icons.support_agent, color: Theme.of(context).primaryColor),
+                        backgroundColor: primaryBlue.withValues(alpha: 0.15),
+                        child: const Icon(Icons.support_agent, color: primaryBlue),
                       ),
                       SizedBox(width: 12.w),
                       Column(
@@ -123,21 +126,23 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          elevation: 2,
+          elevation: 0,
+          backgroundColor: primaryBlue,
           title: _selectedIndex == 0
               ? Image.asset('assets/images/nubdexchange_logo.png', scale: 11.sp)
               : CustomText(
                   text: _selectedIndex == 1
-                      ? 'My Cart'
+                      ? 'Cart'
                       : _selectedIndex == 2
                           ? 'Profile'
                           : 'Home',
+                  color: Colors.white,
                   fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                 ),
           actions: [
             IconButton(
-              icon: Icon(Icons.settings, size: 24.sp),
+              icon: Icon(Icons.settings, size: 24.sp, color: Colors.white),
               onPressed: () => Navigator.pushNamed(context, '/settings'),
             ),
           ],
@@ -183,15 +188,20 @@ class _HomeScreenState extends State<HomeScreen> {
             : FloatingActionButton(
                 onPressed: _showChatDialog,
                 tooltip: 'Chat with Support',
-                child: const Icon(Icons.chat),
+                backgroundColor: accentGold,
+                child: const Icon(Icons.chat, color: Colors.black87),
               ),
         bottomNavigationBar: BottomNavigationBar(
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          backgroundColor: Colors.white,
+          selectedItemColor: primaryBlue,
+          unselectedItemColor: Colors.grey.shade500,
+          type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.storefront_outlined),
-              activeIcon: Icon(Icons.storefront),
+              icon: Icon(Icons.shopping_bag_outlined),
+              activeIcon: Icon(Icons.shopping_bag),
               label: 'Shop',
             ),
             BottomNavigationBarItem(

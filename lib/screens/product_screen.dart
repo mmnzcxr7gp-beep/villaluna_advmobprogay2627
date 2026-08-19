@@ -17,6 +17,9 @@ class _ProductScreenState extends State<ProductScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  static const Color primaryBlue = Color(0xFF354898);
+  static const Color accentGold = Color(0xFFFFB800);
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +45,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 ? Icons.star
                 : (i == fullStars && hasHalfStar ? Icons.star_half : Icons.star_border),
             size: 13.sp,
-            color: Colors.amber.shade700,
+            color: accentGold,
           ),
         SizedBox(width: 3.w),
         Text(
@@ -76,7 +79,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 },
                 decoration: InputDecoration(
                   hintText: 'Search products...',
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: const Icon(Icons.search, color: primaryBlue),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear),
@@ -88,13 +91,21 @@ class _ProductScreenState extends State<ProductScreen> {
                           },
                         )
                       : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r),
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14.r),
+                    borderSide: const BorderSide(color: primaryBlue, width: 1.5),
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 8.h),
+            SizedBox(height: 4.h),
             FutureBuilder<List<Product>>(
               future: _productsFuture,
               builder: (context, snapshot) {
@@ -102,7 +113,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(32.0),
-                      child: CircularProgressIndicator(),
+                      child: CircularProgressIndicator(color: primaryBlue),
                     ),
                   );
                 }
@@ -128,9 +139,12 @@ class _ProductScreenState extends State<ProductScreen> {
 
                 if (filteredProducts.isEmpty) {
                   return Center(
-                    child: CustomText(
-                      text: 'No products found.',
-                      fontSize: 14.sp,
+                    child: Padding(
+                      padding: EdgeInsets.all(32.r),
+                      child: CustomText(
+                        text: 'No products found.',
+                        fontSize: 14.sp,
+                      ),
                     ),
                   );
                 }
@@ -138,20 +152,21 @@ class _ProductScreenState extends State<ProductScreen> {
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                   itemCount: filteredProducts.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 10.w,
-                    mainAxisSpacing: 10.h,
+                    crossAxisSpacing: 12.w,
+                    mainAxisSpacing: 12.h,
                     childAspectRatio: 0.68,
                   ),
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
                     return Card(
-                      elevation: 2,
+                      elevation: 1.5,
                       clipBehavior: Clip.antiAlias,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
+                        borderRadius: BorderRadius.circular(14.r),
                       ),
                       // Enhancement 2: Product details navigation
                       child: InkWell(
@@ -186,7 +201,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                     child: Container(
                                       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
                                       decoration: BoxDecoration(
-                                        color: Colors.amber.shade700,
+                                        color: accentGold,
                                         borderRadius: BorderRadius.circular(6.r),
                                       ),
                                       child: Row(
@@ -211,7 +226,7 @@ class _ProductScreenState extends State<ProductScreen> {
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsets.all(8.r),
+                              padding: EdgeInsets.all(10.r),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -228,8 +243,9 @@ class _ProductScreenState extends State<ProductScreen> {
                                   SizedBox(height: 4.h),
                                   CustomText(
                                     text: '\$${product.price.toStringAsFixed(2)}',
-                                    fontSize: 13.sp,
-                                    fontWeight: FontWeight.w600,
+                                    color: accentGold,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ],
                               ),
