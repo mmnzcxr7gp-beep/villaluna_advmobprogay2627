@@ -12,7 +12,8 @@ class ProductScreen extends StatefulWidget {
   State<ProductScreen> createState() => _ProductScreenState();
 }
 
-class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveClientMixin {
+class _ProductScreenState extends State<ProductScreen>
+    with AutomaticKeepAliveClientMixin {
   late final Future<List<Product>> _productsFuture;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -46,7 +47,9 @@ class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveCl
           Icon(
             i < fullStars
                 ? Icons.star
-                : (i == fullStars && hasHalfStar ? Icons.star_half : Icons.star_border),
+                : (i == fullStars && hasHalfStar
+                    ? Icons.star_half
+                    : Icons.star_border),
             size: 13.sp,
             color: accentGold,
           ),
@@ -97,14 +100,16 @@ class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveCl
                       : null,
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14.r),
                     borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14.r),
-                    borderSide: const BorderSide(color: primaryBlue, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: primaryBlue, width: 1.5),
                   ),
                 ),
               ),
@@ -156,7 +161,8 @@ class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveCl
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
                   itemCount: filteredProducts.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -178,7 +184,8 @@ class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveCl
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ProductDetailsScreen(product: product),
+                              builder: (context) =>
+                                  ProductDetailsScreen(product: product),
                             ),
                           );
                         },
@@ -203,15 +210,18 @@ class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveCl
                                     top: 6.r,
                                     right: 6.r,
                                     child: Container(
-                                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 6.w, vertical: 3.h),
                                       decoration: BoxDecoration(
                                         color: accentGold,
-                                        borderRadius: BorderRadius.circular(6.r),
+                                        borderRadius:
+                                            BorderRadius.circular(6.r),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.star, color: Colors.white, size: 12.sp),
+                                          Icon(Icons.star,
+                                              color: Colors.white, size: 12.sp),
                                           SizedBox(width: 2.w),
                                           Text(
                                             product.rating.toStringAsFixed(1),
@@ -246,7 +256,8 @@ class _ProductScreenState extends State<ProductScreen> with AutomaticKeepAliveCl
                                   _buildStarRating(product.rating),
                                   SizedBox(height: 4.h),
                                   CustomText(
-                                    text: '\$${product.price.toStringAsFixed(2)}',
+                                    text:
+                                        '\$${product.price.toStringAsFixed(2)}',
                                     color: accentGold,
                                     fontSize: 14.sp,
                                     fontWeight: FontWeight.bold,

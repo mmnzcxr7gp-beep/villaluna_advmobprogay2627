@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import '../models/user.dart';
+import '../services/auth_storage_service.dart';
+import '../widgets/custom_text.dart';
 import 'cart_screen.dart';
 import 'product_screen.dart';
-import '../widgets/custom_text.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
-  const HomeScreen({super.key, this.username = ''});
+  final User? user;
+
+  const HomeScreen({
+    super.key,
+    this.username = '',
+    this.user,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -15,11 +23,30 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final PageController _pageController = PageController();
+  final AuthStorageService _authStorageService = AuthStorageService();
+  User? _activeUser;
 
-  static const Color primaryBlue = Color(0xFF354898);
+  static const Color nuBlue = Color(0xFF354898);
   static const Color accentGold = Color(0xFFFFB800);
 
-  final PageController _pageController = PageController();
+  @override
+  void initState() {
+    super.initState();
+    _activeUser = widget.user;
+    if (_activeUser == null) {
+      _loadActiveUser();
+    }
+  }
+
+  Future<void> _loadActiveUser() async {
+    final user = await _authStorageService.getSavedUser();
+    if (mounted && user != null) {
+      setState(() {
+        _activeUser = user;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -52,8 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: primaryBlue.withValues(alpha: 0.15),
-                        child: const Icon(Icons.support_agent, color: primaryBlue),
+                        backgroundColor: nuBlue.withValues(alpha: 0.15),
+                        child: const Icon(Icons.support_agent, color: nuBlue),
                       ),
                       SizedBox(width: 12.w),
                       Column(
@@ -87,7 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(10.r),
                 ),
                 child: CustomText(
-                  text: 'Hi there! 👋 How can we assist you with your shopping experience today?',
+                  text:
+                      'Hi there! 👋 How can we assist you with your shopping experience today?',
                   fontSize: 13.sp,
                 ),
               ),
@@ -121,20 +149,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final modalUser = ModalRoute.of(context)?.settings.arguments as User?;
+    final user = modalUser ?? _activeUser ?? widget.user;
+
+    final String profileTitle = (user != null && user.firstName.isNotEmpty)
+        ? user.firstName
+        : 'Profile';
+
     return PopScope(
       canPop: false,
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
           elevation: 0,
-          backgroundColor: primaryBlue,
+          backgroundColor: nuBlue,
           title: _selectedIndex == 0
               ? Image.asset('assets/images/nubdexchange_logo.png', scale: 11.sp)
               : CustomText(
                   text: _selectedIndex == 1
                       ? 'Cart'
                       : _selectedIndex == 2
-                          ? 'Profile'
+                          ? profileTitle
                           : 'Home',
                   color: Colors.white,
                   fontSize: 20.sp,
@@ -147,33 +182,18 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        // Enhancement 1: Cart screen and detail-screen navigation
         body: PageView(
           physics: const NeverScrollableScrollPhysics(),
           controller: _pageController,
           children: [
             const ProductScreen(),
             CartScreen(
+              userId: user?.id,
               onBrowseProducts: () => _onTappedBar(0),
             ),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.person, size: 64.sp, color: Colors.grey),
-                  SizedBox(height: 12.h),
-                  CustomText(
-                    text: widget.username.isNotEmpty ? 'User: ${widget.username}' : 'User Profile',
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  SizedBox(height: 6.h),
-                  CustomText(
-                    text: 'Villaluna - AdvMobProg AY2627',
-                    fontSize: 13.sp,
-                  ),
-                ],
-              ),
+            ProfileScreen(
+              initialUser: user,
+              onOpenCart: () => _onTappedBar(1),
             ),
           ],
           onPageChanged: (page) {
@@ -182,9 +202,8 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           },
         ),
-        // Enhancement 2: Chat FloatingActionButton and cart-screen visibility
         floatingActionButton: _selectedIndex == 1
-            ? null // Hide chat FloatingActionButton while cart_screen.dart is active
+            ? null // Hide chat FAB while cart tab is active
             : FloatingActionButton(
                 onPressed: _showChatDialog,
                 tooltip: 'Chat with Support',
@@ -195,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
           showSelectedLabels: false,
           showUnselectedLabels: false,
           backgroundColor: Colors.white,
-          selectedItemColor: primaryBlue,
+          selectedItemColor: nuBlue,
           unselectedItemColor: Colors.grey.shade500,
           type: BottomNavigationBarType.fixed,
           items: const [

@@ -16,7 +16,8 @@ class SettingsScreen extends StatelessWidget {
     final isDark = themeProvider.isDark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121624) : const Color(0xFFF7F8FC),
+      backgroundColor:
+          isDark ? const Color(0xFF121624) : const Color(0xFFF7F8FC),
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
@@ -67,7 +68,8 @@ class SettingsScreen extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                     subtitle: CustomText(
-                      text: isDark ? 'Dark theme enabled' : 'Light theme enabled',
+                      text:
+                          isDark ? 'Dark theme enabled' : 'Light theme enabled',
                       color: Colors.grey.shade600,
                       fontSize: 12,
                     ),

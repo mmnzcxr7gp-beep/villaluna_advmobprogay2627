@@ -39,7 +39,10 @@ void main() {
           'qrCode': 'https://example.com/qr'
         },
         'thumbnail': 'https://example.com/thumb.jpg',
-        'images': ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
+        'images': [
+          'https://example.com/img1.jpg',
+          'https://example.com/img2.jpg'
+        ],
       };
 
       final product = Product.fromJson(json);

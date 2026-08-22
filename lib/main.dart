@@ -8,7 +8,10 @@ import 'package:provider/provider.dart';
 // screens
 import 'screens/cart_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/signin_screen.dart';
+import 'screens/splash_screen.dart';
 
 // providers
 import 'providers/theme_provider.dart';
@@ -16,12 +19,10 @@ import 'providers/theme_provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then(
-    (_) async {
-      await dotenv.load(fileName: 'assets/.env');
-      runApp(const VillalunaAdvMobProg());
-    },
-  );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await dotenv.load(fileName: 'assets/.env');
+
+  runApp(const VillalunaAdvMobProg());
 }
 
 class VillalunaAdvMobProg extends StatelessWidget {
@@ -42,10 +43,13 @@ class VillalunaAdvMobProg extends StatelessWidget {
             theme: themeModel.lightTheme,
             darkTheme: themeModel.darkTheme,
             themeMode: themeModel.isDark ? ThemeMode.dark : ThemeMode.light,
-            title: 'E-Commerce App',
-            initialRoute: '/home',
+            title: 'Villaluna E-Commerce App',
+            initialRoute: '/splash',
             routes: {
+              '/splash': (context) => const SplashScreen(),
+              '/signin': (context) => const SignInScreen(),
               '/home': (context) => const HomeScreen(),
+              '/profile': (context) => const ProfileScreen(),
               '/cart': (context) => const CartScreen(),
               '/settings': (context) => const SettingsScreen(),
             },

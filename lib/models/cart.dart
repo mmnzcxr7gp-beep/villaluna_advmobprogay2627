@@ -24,11 +24,14 @@ class CartProduct {
   factory CartProduct.fromJson(Map<String, dynamic> json) {
     final double rawPrice = (json['price'] as num?)?.toDouble() ?? 0.0;
     final int rawQuantity = (json['quantity'] as num?)?.toInt() ?? 0;
-    final double rawTotal = (json['total'] as num?)?.toDouble() ?? (rawPrice * rawQuantity);
-    final double rawDiscountPercentage = (json['discountPercentage'] as num?)?.toDouble() ?? 0.0;
-    final double rawDiscountedTotal = (json['discountedTotal'] as num?)?.toDouble() ??
-        (json['discountedPrice'] as num?)?.toDouble() ??
-        (rawTotal - (rawTotal * rawDiscountPercentage / 100));
+    final double rawTotal =
+        (json['total'] as num?)?.toDouble() ?? (rawPrice * rawQuantity);
+    final double rawDiscountPercentage =
+        (json['discountPercentage'] as num?)?.toDouble() ?? 0.0;
+    final double rawDiscountedTotal =
+        (json['discountedTotal'] as num?)?.toDouble() ??
+            (json['discountedPrice'] as num?)?.toDouble() ??
+            (rawTotal - (rawTotal * rawDiscountPercentage / 100));
 
     return CartProduct(
       id: (json['id'] as num?)?.toInt() ?? 0,
@@ -82,7 +85,8 @@ class CartProduct {
     return Product(
       id: id,
       title: title,
-      description: 'Quantity in Cart: $quantity. Unit Price: \$${price.toStringAsFixed(2)}',
+      description:
+          'Quantity in Cart: $quantity. Unit Price: \$${price.toStringAsFixed(2)}',
       category: 'Cart Item',
       price: price,
       discountPercentage: discountPercentage,
@@ -132,12 +136,17 @@ class Cart {
 
   factory Cart.fromJson(Map<String, dynamic> json) {
     final rawProducts = (json['products'] as List? ?? [])
-        .map((e) => CartProduct.fromJson(e is Map<String, dynamic> ? e : Map<String, dynamic>.from(e as Map)))
+        .map((e) => CartProduct.fromJson(e is Map<String, dynamic>
+            ? e
+            : Map<String, dynamic>.from(e as Map)))
         .toList();
 
-    final double calculatedTotal = rawProducts.fold(0.0, (sum, item) => sum + item.total);
-    final double calculatedDiscountedTotal = rawProducts.fold(0.0, (sum, item) => sum + item.discountedTotal);
-    final int calculatedTotalQuantity = rawProducts.fold(0, (sum, item) => sum + item.quantity);
+    final double calculatedTotal =
+        rawProducts.fold(0.0, (sum, item) => sum + item.total);
+    final double calculatedDiscountedTotal =
+        rawProducts.fold(0.0, (sum, item) => sum + item.discountedTotal);
+    final int calculatedTotalQuantity =
+        rawProducts.fold(0, (sum, item) => sum + item.quantity);
 
     return Cart(
       id: (json['id'] as num?)?.toInt() ?? 0,
@@ -147,8 +156,10 @@ class Cart {
           (json['discountedPrice'] as num?)?.toDouble() ??
           calculatedDiscountedTotal,
       userId: (json['userId'] as num?)?.toInt() ?? 0,
-      totalProducts: (json['totalProducts'] as num?)?.toInt() ?? rawProducts.length,
-      totalQuantity: (json['totalQuantity'] as num?)?.toInt() ?? calculatedTotalQuantity,
+      totalProducts:
+          (json['totalProducts'] as num?)?.toInt() ?? rawProducts.length,
+      totalQuantity:
+          (json['totalQuantity'] as num?)?.toInt() ?? calculatedTotalQuantity,
     );
   }
 

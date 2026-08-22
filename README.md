@@ -1,6 +1,6 @@
 # villaluna_advmobprogAY2627
 
-## Lab Activity 2: Discussion (Bea Borres Style 💅✨)
+## Lab Activity 2: Discussion 
 
 ### Interaction Between Model, Service, and Screen
 
@@ -122,3 +122,106 @@ So ayun na nga, guys! For Lab Activity 3, we took things to the NEXT LEVEL! As i
 ### 10. Personal Reflection & Learning Takeaway
 
 same as well sa lab act 2 ang dami ko parinnatutunan hahaha
+
+---
+
+## Lab Activity 4: API Part III
+
+### Overview
+In **Lab Activity 4: API Part III**, we implemented persistent user authentication, session restoration, user profiling, and dynamic cart filtering with persistent storage via `SharedPreferences`.
+
+---
+
+### 1. User Model & API Deserialization (`lib/models/user.dart`)
+- **Strongly Typed Model**: The `User` model defines fields corresponding to the DummyJSON user and auth endpoints: `id` (`int`), `username`, `firstName`, `lastName`, `email`, `phone`, `gender`, `image`, and `token`.
+- **Safe JSON Conversion**: `User.fromJson()` safely handles both nullable and optional JSON keys, converts dynamic numeric identifiers into standard integer values, and extracts tokens seamlessly (`json['token'] ?? json['accessToken']`).
+- **Serialization for Persistence**: `User.toJson()` serializes the active model back into a structured `Map<String, dynamic>` which is encoded into a JSON string for persistent local storage.
+- **Computed Properties & Helpers**: Contains `fullName` helper getter (`'$firstName $lastName'.trim()`) and `copyWith()` method for non-destructive state manipulation.
+
+---
+
+### 2. UserService & Network Layer (`lib/services/user_service.dart`)
+- **Encapsulated Network Operations**: `UserService` abstracts all HTTP communications with DummyJSON (`$host/auth/login` and `$host/users/$id`).
+- **Secure Request Handling**: Sends `POST` requests with properly encoded JSON payloads (`application/json`) containing `username`, `password`, and session duration parameters.
+- **Robust Error Handling**: Accurately differentiates between invalid credentials (HTTP 400/401), server anomalies, request timeouts, and offline socket failures (`SocketException`) while throwing clean, user-friendly exception messages without logging sensitive passwords or JWT tokens.
+- **Profile Enrichment**: Automatically fetches and enriches the user's detailed profile (phone number, gender, address, image) upon successful authentication.
+
+---
+
+### 3. SignInScreen & Credential Validation (`lib/screens/signin_screen.dart`)
+- **Material 3 Form Architecture**: Built using `Form` with a `GlobalKey<FormState>` for declarative client-side input validation.
+- **Input Controls**: Features username and password text fields with prefix icons, dynamic password visibility toggle (`obscureText`), and empty input validation rules.
+- **Asynchronous Workflow & Debouncing**: Disables form inputs and displays a circular loading spinner inside the primary button during active network requests to prevent duplicate submissions.
+- **UserService Integration**: Calls `UserService.login()` without embedding raw HTTP requests in UI code. Upon success, stores the user session via `AuthStorageService` and transitions using `Navigator.pushNamedAndRemoveUntil('/home', (r) => false)` so users cannot navigate back to the login screen with the device Back button.
+
+---
+
+### 4. Persistent Authentication Storage (`lib/services/auth_storage_service.dart`)
+- **SharedPreferences Implementation**: Utilizes `SharedPreferences` to persist user session data across application restarts.
+- **Key-Value Management**: Stores `auth_user_json` (serialized JSON representation of the `User` object), `auth_user_id` (`int`), and `auth_is_authenticated` (`bool`).
+- **Safe Retrieval & Validation**: `getSavedUser()` decodes stored JSON and validates that a reliable, positive integer user ID exists. Corrupted or incomplete storage entries fail gracefully by returning `null`.
+- **Session Lifecycle & Cleanup**: `clearUser()` wipes all authentication tokens and keys on logout.
+
+---
+
+### 5. SplashScreen & Route Selection (`lib/screens/splash_screen.dart`)
+- **Initial Entry Point**: Registered as `initialRoute: '/splash'` in `lib/main.dart`.
+- **Branded Presentation**: Displays a centered application logo, app title, and animated loading indicator matching the application's navy/blue color palette (`#17233C` and `#315EFB`).
+- **Lifecycle-Safe Initialization**: Checks persistent authentication status in `initState()` via `AuthStorageService.getSavedUser()`.
+- **Conditional Routing**:
+  - If a valid saved user exists: Navigates to `/home` (or `/profile`) using `pushReplacementNamed`.
+  - If unauthenticated: Navigates directly to `/signin` using `pushReplacementNamed`.
+- **Safety Checks**: Verifies `mounted` before executing route navigation to eliminate asynchronous context exceptions.
+
+---
+
+### 6. ProfileScreen & Authenticated User Rendering (`lib/screens/profile_screen.dart`)
+- **User Data Presentation**: Renders authenticated user details including user avatar (with network fallback and placeholder), full name, username badge, numeric User ID, email, phone number, and gender.
+- **Direct Cart Navigation**: Contains a primary action button (**View My Cart**) that opens the cart tailored to the authenticated user ID.
+- **Secure Logout Flow**: Provides a logout button with confirmation dialog. When confirmed, it wipes `AuthStorageService`, clears `CartService` in-memory caches, and redirects to `/signin` with `pushNamedAndRemoveUntil`.
+
+---
+
+### 7. CartScreen & Dynamic User ID Filtering (`lib/screens/cart_screen.dart`)
+- **Dynamic User Identification**: Dynamically resolves the authenticated user's ID from `AuthStorageService.getSavedUser()` or passed constructor arguments, eliminating hardcoded `userId = 1`.
+- **User-Specific API Retrieval**: Queries `$host/carts/user/{userId}` to fetch and render the specific shopping cart belonging to the logged-in user (e.g. User 1 `emilys` vs User 2 `michaelw`).
+- **Multi-State UI**: Fully supports loading state (spinner), error state (retry button), empty state (with "Browse Products" action), and success state (interactive cart cards with quantity controls and real-time total recalculations).
+
+---
+
+### 8. Architectural Separation of Concerns (Model-Service-Screen-Provider)
+The application architecture is organized into distinct, modular layers:
+1. **Model Layer** (`lib/models/`): Pure Dart classes (`User`, `Product`, `Cart`) responsible solely for data structures, serialization (`toJson`), deserialization (`fromJson`), and data transformations (`.toProduct()`).
+2. **Service Layer** (`lib/services/`): Handles business logic, network communication, HTTP requests, API endpoint routing, and persistent storage wrappers (`UserService`, `CartService`, `ProductService`, `AuthStorageService`).
+3. **Screen / View Layer** (`lib/screens/`): Pure presentation and user interaction (`SplashScreen`, `SignInScreen`, `HomeScreen`, `ProfileScreen`, `CartScreen`, `ProductScreen`, `ProductDetailsScreen`).
+4. **Provider / State Layer** (`lib/providers/`): Manages application-wide theme preferences and reactive state (`ThemeProvider`).
+
+---
+
+### 9. Engineering Benefits of the Modular Architecture
+- **Readability**: Code is well-structured and concise; UI files only render widgets and handle user gestures without dealing with JSON parsing or HTTP protocols.
+- **Testability**: Services and models can be unit-tested independently without mocking Flutter UI elements or building complex widget trees.
+- **Maintainability**: Changes in backend API schemas (e.g., key name changes or new authentication headers) are isolated to the service and model layers without affecting UI components.
+- **Reusability**: `AuthStorageService` and `UserService` can be invoked across multiple screens (e.g., Splash, Sign In, Profile, Cart) without code duplication.
+
+---
+
+### 10. Summary of Files Added or Modified
+
+| Status | File Path | Description |
+| :--- | :--- | :--- |
+| **Added** | `lib/models/user.dart` | User data model with JSON serialization and Enhancement 3 comment |
+| **Added** | `lib/services/auth_storage_service.dart` | SharedPreferences persistent session storage service |
+| **Added** | `lib/services/user_service.dart` | DummyJSON authentication and user profile API service |
+| **Added** | `lib/screens/splash_screen.dart` | Custom splash screen with session restoration and Enhancement 1 comment |
+| **Added** | `lib/screens/signin_screen.dart` | Custom sign-in UI with form validation and Enhancement 2 comment |
+| **Added** | `lib/screens/profile_screen.dart` | User profile screen rendering User model data and Enhancement 3 comment |
+| **Added** | `test/user_model_test.dart` | Comprehensive unit tests for User model |
+| **Added** | `test/auth_flow_test.dart` | Integration tests verifying all 12 authentication and cart test cases |
+| **Modified** | `pubspec.yaml` | Added `shared_preferences: ^2.2.3` |
+| **Modified** | `lib/providers/theme_provider.dart` | Updated with application color palette and Material 3 design tokens |
+| **Modified** | `lib/screens/cart_screen.dart` | Updated with dynamic userId cart loading and Enhancement 3 comment |
+| **Modified** | `lib/screens/home_screen.dart` | Integrated ProfileScreen and CartScreen in bottom navigation |
+| **Modified** | `lib/main.dart` | Configured initialRoute `/splash` and registered all application routes |
+| **Modified** | `README.md` | Added Lab Activity 4 comprehensive documentation & discussions |
+

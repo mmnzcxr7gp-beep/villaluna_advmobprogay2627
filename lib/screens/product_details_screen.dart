@@ -35,7 +35,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           Icon(
             i < fullStars
                 ? Icons.star
-                : (i == fullStars && hasHalfStar ? Icons.star_half : Icons.star_border),
+                : (i == fullStars && hasHalfStar
+                    ? Icons.star_half
+                    : Icons.star_border),
             size: iconSize,
             color: accentGold,
           ),
@@ -83,7 +85,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             label: 'View Cart',
             textColor: accentGold,
             onPressed: () {
-              Navigator.pushNamed(context, '/cart');
+              if (context.mounted) {
+                Navigator.pushNamed(context, '/cart');
+              }
             },
           ),
         ),
@@ -115,7 +119,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121624) : const Color(0xFFF7F8FC),
+      backgroundColor:
+          isDark ? const Color(0xFF121624) : const Color(0xFFF7F8FC),
       appBar: AppBar(
         backgroundColor: primaryBlue,
         elevation: 0,
@@ -176,7 +181,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               SizedBox(height: 4.h),
               CustomText(
-                text: 'Brand: ${product.brand.isNotEmpty ? product.brand : 'Generic'}',
+                text:
+                    'Brand: ${product.brand.isNotEmpty ? product.brand : 'Generic'}',
                 color: Colors.grey.shade600,
                 fontSize: 13.sp,
               ),
@@ -186,7 +192,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                     decoration: BoxDecoration(
                       color: accentGold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8.r),
@@ -206,7 +213,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   SizedBox(width: 12.w),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
                     decoration: BoxDecoration(
                       color: product.stock > 0
                           ? Colors.green.withValues(alpha: 0.15)
@@ -214,8 +222,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: CustomText(
-                      text: product.stock > 0 ? '${product.stock} In Stock' : 'Out of Stock',
-                      color: product.stock > 0 ? Colors.green.shade700 : Colors.red.shade700,
+                      text: product.stock > 0
+                          ? '${product.stock} In Stock'
+                          : 'Out of Stock',
+                      color: product.stock > 0
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,
                     ),
@@ -290,7 +302,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               child: Icon(
                                 Icons.remove,
                                 size: 16.sp,
-                                color: _quantity > 1 ? Colors.black87 : Colors.grey,
+                                color: _quantity > 1
+                                    ? Colors.black87
+                                    : Colors.grey,
                               ),
                             ),
                           ),
@@ -330,7 +344,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: accentGold,
                           foregroundColor: Colors.black87,
-                          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 12.h),
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10.r),
@@ -345,7 +360,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   color: Colors.black87,
                                 ),
                               )
-                            : const Icon(Icons.shopping_cart_outlined, color: Colors.black87),
+                            : const Icon(Icons.shopping_cart_outlined,
+                                color: Colors.black87),
                         label: CustomText(
                           text: _isAddingToCart ? 'Adding...' : 'Add to Cart',
                           color: Colors.black87,
@@ -390,7 +406,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   fontSize: 13.sp,
                                   fontWeight: FontWeight.bold,
                                 ),
-                                _buildStarRating(review.rating.toDouble(), iconSize: 13.sp),
+                                _buildStarRating(review.rating.toDouble(),
+                                    iconSize: 13.sp),
                               ],
                             ),
                             SizedBox(height: 4.h),
