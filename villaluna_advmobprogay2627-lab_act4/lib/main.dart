@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 
 // screens
 import 'screens/cart_screen.dart';
+import 'screens/chat_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
@@ -63,6 +64,7 @@ class VillalunaAdvMobProg extends StatelessWidget {
               '/signin': (context) => const SignInScreen(),
               '/signup': (context) => const SignUpScreen(),
               '/home': (context) => const HomeScreen(),
+              '/chat': (context) => const ChatScreen(),
               '/profile': (context) => const ProfileScreen(),
               '/cart': (context) => const CartScreen(),
               '/settings': (context) => const SettingsScreen(),

@@ -75,7 +75,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Displays dialog to update Firebase display name
   Future<void> _showUpdateUsernameDialog(String currentName) async {
-    final controller = TextEditingController(text: currentName == 'Anonymous User' ? '' : currentName);
+    final controller = TextEditingController(
+        text: currentName == 'Anonymous User' ? '' : currentName);
     final formKey = GlobalKey<FormState>();
 
     final bool? updated = await showDialog<bool>(
@@ -164,9 +165,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           } catch (e) {
                             setDialogState(() {
                               isSubmitting = false;
-                              dialogError = e
-                                  .toString()
-                                  .replaceFirst('Exception: ', '');
+                              dialogError =
+                                  e.toString().replaceFirst('Exception: ', '');
                             });
                           }
                         },
@@ -378,8 +378,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           try {
                             await _userService.resetPasswordFromCurrentPassword(
-                              currentPassword:
-                                  currentPasswordController.text,
+                              currentPassword: currentPasswordController.text,
                               newPassword: newPasswordController.text,
                             );
                             if (dialogCtx.mounted) {
@@ -388,9 +387,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           } catch (e) {
                             setDialogState(() {
                               isSubmitting = false;
-                              dialogError = e
-                                  .toString()
-                                  .replaceFirst('Exception: ', '');
+                              dialogError =
+                                  e.toString().replaceFirst('Exception: ', '');
                             });
                           }
                         },
@@ -550,9 +548,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           } catch (e) {
                             setDialogState(() {
                               isDeleting = false;
-                              dialogError = e
-                                  .toString()
-                                  .replaceFirst('Exception: ', '');
+                              dialogError =
+                                  e.toString().replaceFirst('Exception: ', '');
                             });
                           }
                         },
@@ -750,7 +747,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final data = _userData!;
-    final LoginType loginType = (data['loginType'] as LoginType?) ?? LoginType.dummyJson;
+    final LoginType loginType =
+        (data['loginType'] as LoginType?) ?? LoginType.dummyJson;
 
     return Scaffold(
       backgroundColor: bgLight,
@@ -767,7 +765,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Builds Profile View for Firebase Users
   Widget _buildFirebaseProfile(Map<String, dynamic> data) {
-    final String displayName = data['displayName']?.toString() ?? 'Firebase User';
+    final String displayName =
+        data['displayName']?.toString() ?? 'Firebase User';
     final String email = data['email']?.toString() ?? 'N/A';
     final String uid = data['uid']?.toString() ?? 'N/A';
     final bool emailVerified = (data['emailVerified'] as bool?) ?? false;
@@ -893,8 +892,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 value: emailVerified ? 'Verified' : 'Unverified',
                 iconColor: emailVerified ? successGreen : textGrey,
                 trailingWidget: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                   decoration: BoxDecoration(
                     color: emailVerified
                         ? successGreen.withValues(alpha: 0.12)
@@ -1125,8 +1123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: successGreen,
                       shape: BoxShape.circle,
                     ),
-                    child:
-                        Icon(Icons.check, size: 10.sp, color: Colors.white),
+                    child: Icon(Icons.check, size: 10.sp, color: Colors.white),
                   ),
                 ],
               ),
@@ -1219,7 +1216,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           height: 48.h,
           child: ElevatedButton.icon(
             onPressed: () {
-              final parsedId = (id is int) ? id : int.tryParse(id.toString()) ?? 1;
+              final parsedId =
+                  (id is int) ? id : int.tryParse(id.toString()) ?? 1;
               if (widget.onOpenCart != null) {
                 widget.onOpenCart!();
               } else {

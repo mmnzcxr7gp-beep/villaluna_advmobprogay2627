@@ -137,7 +137,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
         if (!mounted) return;
 
-        final displayName = cred?.user?.displayName ?? cred?.user?.email ?? 'User';
+        final displayName =
+            cred?.user?.displayName ?? cred?.user?.email ?? 'User';
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -429,8 +430,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
-                          borderSide:
-                              const BorderSide(color: nuBlue, width: 2),
+                          borderSide: const BorderSide(color: nuBlue, width: 2),
                         ),
                       ),
                       validator: (value) {
@@ -484,8 +484,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
-                          borderSide:
-                              const BorderSide(color: nuBlue, width: 2),
+                          borderSide: const BorderSide(color: nuBlue, width: 2),
                         ),
                       ),
                       validator: (value) {
@@ -509,8 +508,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           fontSize: 13.sp,
                           fontFamily: 'Poppins',
                         ),
-                        prefixIcon:
-                            Icon(Icons.mail_outline, color: nuBlue, size: 20.sp),
+                        prefixIcon: Icon(Icons.mail_outline,
+                            color: nuBlue, size: 20.sp),
                         contentPadding: EdgeInsets.symmetric(
                             horizontal: 16.w, vertical: 16.h),
                         border: OutlineInputBorder(
@@ -523,8 +522,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
-                          borderSide:
-                              const BorderSide(color: nuBlue, width: 2),
+                          borderSide: const BorderSide(color: nuBlue, width: 2),
                         ),
                       ),
                       validator: (value) {
@@ -581,8 +579,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12.r),
-                          borderSide:
-                              const BorderSide(color: nuBlue, width: 2),
+                          borderSide: const BorderSide(color: nuBlue, width: 2),
                         ),
                       ),
                       validator: (value) {

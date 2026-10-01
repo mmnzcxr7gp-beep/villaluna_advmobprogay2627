@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants.dart';
 import '../models/user.dart';
 import '../services/auth_storage_service.dart';
+import '../services/chat_service.dart';
 import '../services/user_service.dart';
 
 /// State management provider for authentication flows, session persistence,
@@ -10,6 +11,7 @@ import '../services/user_service.dart';
 class AuthProvider with ChangeNotifier {
   final UserService _userService;
   final AuthStorageService _authStorageService;
+  final ChatService _chatService;
 
   LoginType _loginType = LoginType.dummyJson;
   User? _dummyUser;
@@ -21,8 +23,10 @@ class AuthProvider with ChangeNotifier {
   AuthProvider({
     UserService? userService,
     AuthStorageService? authStorageService,
+    ChatService? chatService,
   })  : _userService = userService ?? UserService(),
-        _authStorageService = authStorageService ?? AuthStorageService() {
+        _authStorageService = authStorageService ?? AuthStorageService(),
+        _chatService = chatService ?? ChatService() {
     _init();
   }
 
@@ -64,6 +68,7 @@ class AuthProvider with ChangeNotifier {
       if (fbUser != null) {
         _firebaseUser = fbUser;
         _loginType = LoginType.firebase;
+        await _chatService.ensureCurrentUserDocument();
         await refreshProfile();
         return;
       }
@@ -129,6 +134,7 @@ class AuthProvider with ChangeNotifier {
       _loginType = LoginType.firebase;
 
       await _authStorageService.saveLoginType(LoginType.firebase);
+      await _chatService.ensureCurrentUserDocument();
       await refreshProfile();
 
       _setLoading(false);
@@ -140,11 +146,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Registers a new user account with Firebase Authentication.
+  /// Registers a new user account with Firebase Authentication and creates their Firestore user document.
   Future<bool> signupFirebase({
     required String email,
     required String password,
     required String username,
+    String? firstName,
+    String? lastName,
   }) async {
     _setLoading(true);
     _errorMessage = null;
@@ -157,6 +165,13 @@ class AuthProvider with ChangeNotifier {
 
       if (cred?.user != null) {
         await _userService.updateUsername(username);
+        // Create or merge the Firestore users/{uid} document immediately upon signup
+        await _chatService.ensureCurrentUserDocument(
+          firstName: firstName,
+          lastName: lastName,
+          username: username,
+          displayName: username,
+        );
       }
 
       _setLoading(false);
@@ -183,11 +198,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// Updates Firebase display name.
+  /// Updates Firebase display name and synchronizes Firestore user document.
   Future<bool> updateUsername(String newUsername) async {
     _setLoading(true);
     try {
       await _userService.updateUsername(newUsername);
+      await _chatService.ensureCurrentUserDocument(
+        username: newUsername,
+        displayName: newUsername,
+      );
       await refreshProfile();
       _setLoading(false);
       return true;
@@ -239,6 +258,9 @@ class AuthProvider with ChangeNotifier {
   Future<void> logout() async {
     _setLoading(true);
     try {
+      if (_firebaseUser != null) {
+        await _chatService.updatePresence(false);
+      }
       await _userService.signOut();
       _firebaseUser = null;
       _dummyUser = null;

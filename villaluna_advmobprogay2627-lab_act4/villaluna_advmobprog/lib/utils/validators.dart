@@ -107,7 +107,8 @@ class Validators {
   }
 
   /// Validates that confirm password matches the primary password.
-  static String? validateConfirmPassword(String? value, String originalPassword) {
+  static String? validateConfirmPassword(
+      String? value, String originalPassword) {
     if (value == null || value.isEmpty) {
       return 'Please confirm your password.';
     }

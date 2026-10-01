@@ -79,8 +79,7 @@ class UserService {
       throw _handleFirebaseAuthException(e);
     } catch (e) {
       if (e is Exception) rethrow;
-      throw Exception(
-          'An unexpected error occurred during account creation.');
+      throw Exception('An unexpected error occurred during account creation.');
     }
   }
 
@@ -240,19 +239,22 @@ class UserService {
       case 'invalid-email':
         return Exception('The email address provided is invalid.');
       case 'weak-password':
-        return Exception('The password is too weak. Please choose a stronger password.');
+        return Exception(
+            'The password is too weak. Please choose a stronger password.');
       case 'requires-recent-login':
         return Exception(
             'This action is sensitive and requires recent authentication. Please verify your current password.');
       case 'user-disabled':
         return Exception('This account has been disabled.');
       case 'too-many-requests':
-        return Exception('Too many attempts. Please try again in a few moments.');
+        return Exception(
+            'Too many attempts. Please try again in a few moments.');
       case 'network-request-failed':
         return Exception(
             'Network communication failed. Please check your internet connection.');
       default:
-        return Exception(e.message ?? 'A Firebase authentication error occurred.');
+        return Exception(
+            e.message ?? 'A Firebase authentication error occurred.');
     }
   }
 
@@ -301,24 +303,21 @@ class UserService {
           try {
             final fullProfile = await getUserById(user.id);
             return user.copyWith(
-              phone: fullProfile.phone.isNotEmpty
-                  ? fullProfile.phone
-                  : user.phone,
+              phone:
+                  fullProfile.phone.isNotEmpty ? fullProfile.phone : user.phone,
               gender: fullProfile.gender.isNotEmpty
                   ? fullProfile.gender
                   : user.gender,
-              email: fullProfile.email.isNotEmpty
-                  ? fullProfile.email
-                  : user.email,
+              email:
+                  fullProfile.email.isNotEmpty ? fullProfile.email : user.email,
               firstName: fullProfile.firstName.isNotEmpty
                   ? fullProfile.firstName
                   : user.firstName,
               lastName: fullProfile.lastName.isNotEmpty
                   ? fullProfile.lastName
                   : user.lastName,
-              image: fullProfile.image.isNotEmpty
-                  ? fullProfile.image
-                  : user.image,
+              image:
+                  fullProfile.image.isNotEmpty ? fullProfile.image : user.image,
               age: fullProfile.age > 0 ? fullProfile.age : user.age,
             );
           } catch (_) {

@@ -5,7 +5,8 @@ import 'package:villaluna_advmobprog/utils/validators.dart';
 
 void main() {
   group('Lab Activity 5 - Form Validators Tests', () {
-    test('First Name validation enforces required and minimum 2 characters', () {
+    test('First Name validation enforces required and minimum 2 characters',
+        () {
       expect(Validators.validateFirstName(''), isNotNull);
       expect(Validators.validateFirstName('   '), isNotNull);
       expect(Validators.validateFirstName('J'), isNotNull);
@@ -31,11 +32,14 @@ void main() {
       expect(Validators.validateAge('99'), isNull);
     });
 
-    test('Contact Number validation enforces numeric only and valid length', () {
+    test('Contact Number validation enforces numeric only and valid length',
+        () {
       expect(Validators.validateContactNumber(''), isNotNull);
       expect(Validators.validateContactNumber('abc1234'), isNotNull);
-      expect(Validators.validateContactNumber('+639123456789'), isNotNull); // non-digit '+'
-      expect(Validators.validateContactNumber('12345'), isNotNull); // too short (<7)
+      expect(Validators.validateContactNumber('+639123456789'),
+          isNotNull); // non-digit '+'
+      expect(Validators.validateContactNumber('12345'),
+          isNotNull); // too short (<7)
       expect(Validators.validateContactNumber('09123456789'), isNull);
       expect(Validators.validateContactNumber('09171234567'), isNull);
     });
@@ -56,21 +60,30 @@ void main() {
       expect(Validators.validateEmail('emily.johnson@x.dummyjson.com'), isNull);
     });
 
-    test('Password validation enforces min 8 chars, upper, lower, number, special char', () {
+    test(
+        'Password validation enforces min 8 chars, upper, lower, number, special char',
+        () {
       expect(Validators.validatePassword(''), isNotNull);
       expect(Validators.validatePassword('Short1!'), isNotNull); // < 8
-      expect(Validators.validatePassword('alllowercase1!'), isNotNull); // no uppercase
-      expect(Validators.validatePassword('ALLUPPERCASE1!'), isNotNull); // no lowercase
-      expect(Validators.validatePassword('NoNumbersHere!'), isNotNull); // no number
-      expect(Validators.validatePassword('NoSpecialChar123'), isNotNull); // no special
+      expect(Validators.validatePassword('alllowercase1!'),
+          isNotNull); // no uppercase
+      expect(Validators.validatePassword('ALLUPPERCASE1!'),
+          isNotNull); // no lowercase
+      expect(Validators.validatePassword('NoNumbersHere!'),
+          isNotNull); // no number
+      expect(Validators.validatePassword('NoSpecialChar123'),
+          isNotNull); // no special
       expect(Validators.validatePassword('Password123!'), isNull);
       expect(Validators.validatePassword('Secret@2026'), isNull);
     });
 
     test('Confirm Password validation checks exact match', () {
       expect(Validators.validateConfirmPassword('', 'Secret@2026'), isNotNull);
-      expect(Validators.validateConfirmPassword('Different@2026', 'Secret@2026'), isNotNull);
-      expect(Validators.validateConfirmPassword('Secret@2026', 'Secret@2026'), isNull);
+      expect(
+          Validators.validateConfirmPassword('Different@2026', 'Secret@2026'),
+          isNotNull);
+      expect(Validators.validateConfirmPassword('Secret@2026', 'Secret@2026'),
+          isNull);
     });
 
     test('LoginType enum supports dummyJson and firebase', () {

@@ -73,10 +73,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final password = _passwordController.text;
     final username = _usernameController.text.trim();
 
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+
     final success = await authProvider.signupFirebase(
       email: email,
       password: password,
       username: username,
+      firstName: firstName,
+      lastName: lastName,
     );
 
     if (!mounted) return;
@@ -244,8 +249,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline,
-                            color: errorRed, size: 18.sp),
+                        Icon(Icons.error_outline, color: errorRed, size: 18.sp),
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(

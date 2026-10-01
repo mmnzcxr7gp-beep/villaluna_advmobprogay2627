@@ -12,7 +12,8 @@ class AuthStorageService {
   static const String _keyLoginType = 'auth_login_type';
 
   /// Saves the authenticated User instance to SharedPreferences as a JSON string.
-  Future<bool> saveUser(User user, [LoginType type = LoginType.dummyJson]) async {
+  Future<bool> saveUser(User user,
+      [LoginType type = LoginType.dummyJson]) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userJson = jsonEncode(user.toJson());

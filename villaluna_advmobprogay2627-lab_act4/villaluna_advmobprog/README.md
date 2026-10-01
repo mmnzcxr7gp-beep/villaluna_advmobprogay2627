@@ -22,3 +22,6 @@ Lastly, we implemented persistent authentication and login flow using SharedPref
 ### Lab Act 5
 Now for this one, we integrated Firebase Authentication into our app with dual-login support so users can choose between DummyJSON and Firebase! We built a dedicated 8-field sign-up screen with complete validation, added persistent sessions across app restarts, and enabled full profile management so users can update their username, change passwords with reauthentication, and even delete their account—super clean and production-ready!
 
+### Lab Act 6
+For this one, we integrated Cloud Firestore to build a complete real-time one-to-one messaging system with deterministic chat room IDs! We added a registered-user directory with live search filtering, excluded the logged-in user to prevent self-chat, designed animated sender and receiver chat bubbles with sending, sent, delivered, and seen status checkmarks, hooked up the FloatingActionButton for easy conversation access, and secured the backend with strict, participant-scoped Firestore security rules—literally peak real-time chat!
+

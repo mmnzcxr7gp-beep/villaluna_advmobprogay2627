@@ -148,6 +148,110 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleFabPressed() {
+    final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
+
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CustomText(
+                      text: 'Chat & Support',
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: nuBlue,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(sheetContext),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: nuBlue.withValues(alpha: 0.12),
+                    child: const Icon(Icons.forum, color: nuBlue),
+                  ),
+                  title: CustomText(
+                    text: 'Community Chat',
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  subtitle: CustomText(
+                    text: 'Real-time one-to-one chat with registered users',
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade600,
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    if (fbUser != null) {
+                      Navigator.pushNamed(context, '/chat');
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            'Firebase chat requires Firebase authentication. Please sign in with Firebase.',
+                          ),
+                          backgroundColor: Colors.redAccent,
+                          action: SnackBarAction(
+                            label: 'Sign In',
+                            textColor: Colors.white,
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/signin'),
+                          ),
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: accentGold.withValues(alpha: 0.2),
+                    child:
+                        const Icon(Icons.support_agent, color: Colors.black87),
+                  ),
+                  title: CustomText(
+                    text: 'Customer Support',
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  subtitle: CustomText(
+                    text: 'Inquire about orders, deliveries, or products',
+                    fontSize: 12.sp,
+                    color: Colors.grey.shade600,
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _showChatDialog();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final modalUser = ModalRoute.of(context)?.settings.arguments as User?;
@@ -212,8 +316,8 @@ class _HomeScreenState extends State<HomeScreen> {
         floatingActionButton: _selectedIndex == 1
             ? null // Hide chat FAB while cart tab is active
             : FloatingActionButton(
-                onPressed: _showChatDialog,
-                tooltip: 'Chat with Support',
+                onPressed: _handleFabPressed,
+                tooltip: 'Chat & Support',
                 backgroundColor: accentGold,
                 child: const Icon(Icons.chat, color: Colors.black87),
               ),
