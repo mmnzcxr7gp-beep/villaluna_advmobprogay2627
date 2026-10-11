@@ -1,1 +1,19 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"villalunaadvmobprog2627","configurations":{"web":"1:308278103038:web:d6f2d9e14921717086ceaf","windows":"1:308278103038:web:d287f7f23a09bdb086ceaf"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "villalunaadvmobprog2627",
+          "configurations": {
+            "web": "1:308278103038:web:d6f2d9e14921717086ceaf",
+            "windows": "1:308278103038:web:d287f7f23a09bdb086ceaf"
+          }
+        }
+      }
+    }
+  }
+}

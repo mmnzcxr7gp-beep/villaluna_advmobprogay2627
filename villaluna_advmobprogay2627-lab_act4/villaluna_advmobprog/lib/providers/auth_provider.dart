@@ -146,6 +146,139 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// Unified authentication supporting both DummyJSON and Firebase credentials.
+  /// If [identifier] contains '@', attempts Firebase Auth first, then DummyJSON fallback.
+  /// Otherwise, attempts DummyJSON first, then looks up Firebase account by username.
+  Future<bool> loginUnified({
+    required String identifier,
+    required String password,
+  }) async {
+    _setLoading(true);
+    _errorMessage = null;
+
+    final trimmedIdentifier = identifier.trim();
+    final trimmedPassword = password.trim();
+
+    if (trimmedIdentifier.isEmpty || trimmedPassword.isEmpty) {
+      _errorMessage = 'Username/email and password cannot be empty.';
+      _setLoading(false);
+      return false;
+    }
+
+    try {
+      if (trimmedIdentifier.contains('@')) {
+        // Try Firebase Authentication first
+        try {
+          final cred = await _userService.signIn(
+            email: trimmedIdentifier,
+            password: trimmedPassword,
+          );
+
+          _firebaseUser =
+              cred?.user ?? fb_auth.FirebaseAuth.instance.currentUser;
+          _dummyUser = null;
+          _loginType = LoginType.firebase;
+
+          await _authStorageService.saveLoginType(LoginType.firebase);
+          await _chatService.ensureCurrentUserDocument();
+          await refreshProfile();
+
+          _setLoading(false);
+          return true;
+        } catch (fbError) {
+          // If Firebase failed, fallback to DummyJSON in case user used an email as username
+          try {
+            final user = await _userService.login(
+              username: trimmedIdentifier,
+              password: trimmedPassword,
+            );
+
+            _dummyUser = user;
+            _firebaseUser = null;
+            _loginType = LoginType.dummyJson;
+
+            await _authStorageService.saveUser(user, LoginType.dummyJson);
+            await refreshProfile();
+
+            _setLoading(false);
+            return true;
+          } catch (_) {
+            _errorMessage = fbError.toString().replaceFirst('Exception: ', '');
+            _setLoading(false);
+            return false;
+          }
+        }
+      } else {
+        // Identifier is a username: Try DummyJSON first
+        try {
+          final user = await _userService.login(
+            username: trimmedIdentifier,
+            password: trimmedPassword,
+          );
+
+          _dummyUser = user;
+          _firebaseUser = null;
+          _loginType = LoginType.dummyJson;
+
+          await _authStorageService.saveUser(user, LoginType.dummyJson);
+          await refreshProfile();
+
+          _setLoading(false);
+          return true;
+        } catch (dummyError) {
+          // If DummyJSON fails, check if a Firebase user registered with this username
+          try {
+            var snapshot = await _chatService.firestore
+                .collection('users')
+                .where('username', isEqualTo: trimmedIdentifier)
+                .limit(1)
+                .get();
+            if (snapshot.docs.isEmpty) {
+              snapshot = await _chatService.firestore
+                  .collection('users')
+                  .where('username', isEqualTo: trimmedIdentifier.toLowerCase())
+                  .limit(1)
+                  .get();
+            }
+
+            if (snapshot.docs.isNotEmpty) {
+              final email = snapshot.docs.first.data()['email'] as String?;
+              if (email != null && email.isNotEmpty) {
+                final cred = await _userService.signIn(
+                  email: email,
+                  password: trimmedPassword,
+                );
+
+                _firebaseUser =
+                    cred?.user ?? fb_auth.FirebaseAuth.instance.currentUser;
+                _dummyUser = null;
+                _loginType = LoginType.firebase;
+
+                await _authStorageService.saveLoginType(LoginType.firebase);
+                await _chatService.ensureCurrentUserDocument();
+                await refreshProfile();
+
+                _setLoading(false);
+                return true;
+              }
+            }
+          } catch (_) {
+            // Ignore firestore lookup error
+          }
+
+          _errorMessage =
+              dummyError.toString().replaceFirst('Exception: ', '');
+          _setLoading(false);
+          return false;
+        }
+      }
+    } catch (e) {
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _setLoading(false);
+      return false;
+    }
+  }
+
   /// Registers a new user account with Firebase Authentication and creates their Firestore user document.
   Future<bool> signupFirebase({
     required String email,

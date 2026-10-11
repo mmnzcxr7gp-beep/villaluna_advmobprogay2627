@@ -211,11 +211,16 @@ class ChatService {
       data['lastMessageAt'] = now;
     }
 
-    final doc = await roomRef.get();
-    if (!doc.exists) {
+    try {
+      final doc = await roomRef.get();
+      if (!doc.exists) {
+        data['createdAt'] = now;
+        await roomRef.set(data);
+      } else {
+        await roomRef.set(data, SetOptions(merge: true));
+      }
+    } catch (_) {
       data['createdAt'] = now;
-      await roomRef.set(data);
-    } else {
       await roomRef.set(data, SetOptions(merge: true));
     }
   }

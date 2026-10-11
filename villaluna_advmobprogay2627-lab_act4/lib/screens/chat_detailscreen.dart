@@ -61,6 +61,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return;
     }
 
+    // Ensure chat room exists in Firestore
+    _chatService.createOrUpdateChatRoom(widget.receiver);
+
     // Mark messages as delivered and seen upon entering conversation
     _chatService.markMessagesAsDelivered(widget.receiver.uid);
     _chatService.markMessagesAsSeen(widget.receiver.uid);

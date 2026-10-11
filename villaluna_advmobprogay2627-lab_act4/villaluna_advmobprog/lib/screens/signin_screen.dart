@@ -3,10 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../constants.dart';
-import '../models/user.dart';
 import '../providers/auth_provider.dart';
-import '../services/auth_storage_service.dart';
-import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -19,28 +16,18 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // DummyJSON Controllers
-  final TextEditingController _usernameController =
+  // Single unified input controllers for both DummyJSON & Firebase
+  final TextEditingController _identifierController =
       TextEditingController(text: 'emilys');
   final TextEditingController _passwordController =
       TextEditingController(text: 'emilyspass');
 
-  // Firebase Controllers
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _firebasePasswordController =
-      TextEditingController();
-
-  final UserService _userService = UserService();
-  final AuthStorageService _authStorageService = AuthStorageService();
-
-  LoginType _selectedLoginType = LoginType.dummyJson;
   bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
 
   // Application Palette Constants
   static const Color nuBlue = Color(0xFF354898);
-  static const Color accentGold = Color(0xFFFFB800);
   static const Color borderGrey = Color(0xFFD0D5DD);
   static const Color textDark = Color(0xFF1E2022);
   static const Color errorRed = Color(0xFFD92D20);
@@ -48,17 +35,15 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
-    _emailController.dispose();
-    _firebasePasswordController.dispose();
     super.dispose();
   }
 
-  // Quick fill helper for testing DummyJSON
-  void _fillSampleCredentials(String username, String password) {
+  // Quick fill helper for testing sample credentials
+  void _fillSampleCredentials(String identifier, String password) {
     setState(() {
-      _usernameController.text = username;
+      _identifierController.text = identifier;
       _passwordController.text = password;
       _errorMessage = null;
     });
@@ -82,63 +67,22 @@ class _SignInScreenState extends State<SignInScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      if (_selectedLoginType == LoginType.dummyJson) {
-        // DummyJSON Workflow
-        final String username = _usernameController.text.trim();
-        final String password = _passwordController.text.trim();
+      final String identifier = _identifierController.text.trim();
+      final String password = _passwordController.text;
 
-        final User authenticatedUser = await _userService.login(
-          username: username,
-          password: password,
-        );
+      final bool success = await authProvider.loginUnified(
+        identifier: identifier,
+        password: password,
+      );
 
-        // Persist session
-        await _authStorageService.saveUser(
-            authenticatedUser, LoginType.dummyJson);
-        await authProvider.refreshProfile();
+      if (!mounted) return;
 
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('Welcome back, ${authenticatedUser.fullName}!'),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF16A36A),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.r)),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/home',
-          (route) => false,
-          arguments: authenticatedUser,
-        );
-      } else {
-        // Firebase Workflow
-        final String email = _emailController.text.trim();
-        final String password = _firebasePasswordController.text;
-
-        final cred = await _userService.signIn(
-          email: email,
-          password: password,
-        );
-
-        await authProvider.refreshProfile();
-
-        if (!mounted) return;
-
-        final displayName =
-            cred?.user?.displayName ?? cred?.user?.email ?? 'User';
+      if (success) {
+        final displayName = authProvider.loginType == LoginType.firebase
+            ? (authProvider.firebaseUser?.displayName ??
+                authProvider.firebaseUser?.email ??
+                'User')
+            : (authProvider.dummyUser?.fullName ?? 'User');
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -162,7 +106,13 @@ class _SignInScreenState extends State<SignInScreen> {
         Navigator.of(context).pushNamedAndRemoveUntil(
           '/home',
           (route) => false,
+          arguments: authProvider.dummyUser,
         );
+      } else {
+        setState(() {
+          _errorMessage = authProvider.errorMessage ??
+              'Invalid credentials. Please verify your username/email and password.';
+        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -176,130 +126,6 @@ class _SignInScreenState extends State<SignInScreen> {
         });
       }
     }
-  }
-
-  Widget _buildLoginTypeSelector() {
-    return Container(
-      decoration: BoxDecoration(
-        color: lightBg,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: borderGrey),
-      ),
-      padding: EdgeInsets.all(4.r),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (_isLoading) return;
-                setState(() {
-                  _selectedLoginType = LoginType.dummyJson;
-                  _errorMessage = null;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: _selectedLoginType == LoginType.dummyJson
-                      ? nuBlue
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9.r),
-                  boxShadow: _selectedLoginType == LoginType.dummyJson
-                      ? [
-                          BoxShadow(
-                            color: nuBlue.withValues(alpha: 0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.api_outlined,
-                      size: 16.sp,
-                      color: _selectedLoginType == LoginType.dummyJson
-                          ? Colors.white
-                          : Colors.grey.shade700,
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      'DummyJSON',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                        color: _selectedLoginType == LoginType.dummyJson
-                            ? Colors.white
-                            : Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 4.w),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (_isLoading) return;
-                setState(() {
-                  _selectedLoginType = LoginType.firebase;
-                  _errorMessage = null;
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(vertical: 10.h),
-                decoration: BoxDecoration(
-                  color: _selectedLoginType == LoginType.firebase
-                      ? nuBlue
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(9.r),
-                  boxShadow: _selectedLoginType == LoginType.firebase
-                      ? [
-                          BoxShadow(
-                            color: nuBlue.withValues(alpha: 0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
-                      : null,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.local_fire_department,
-                      size: 16.sp,
-                      color: _selectedLoginType == LoginType.firebase
-                          ? accentGold
-                          : Colors.grey.shade700,
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      'Firebase Auth',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                        color: _selectedLoginType == LoginType.firebase
-                            ? Colors.white
-                            : Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -363,12 +189,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
 
-                  SizedBox(height: 20.h),
-
-                  // Login Type Selector (DummyJSON vs Firebase)
-                  _buildLoginTypeSelector(),
-
-                  SizedBox(height: 18.h),
+                  SizedBox(height: 24.h),
 
                   // Error Banner
                   if (_errorMessage != null) ...[
@@ -402,198 +223,101 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ],
 
-                  // Conditional Fields: DummyJSON (Username) vs Firebase (Email)
-                  if (_selectedLoginType == LoginType.dummyJson) ...[
-                    // Username Field
-                    TextFormField(
-                      controller: _usernameController,
-                      enabled: !_isLoading,
-                      decoration: InputDecoration(
-                        labelText: 'Username',
-                        hintText: 'e.g. emilys',
-                        labelStyle: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13.sp,
-                          fontFamily: 'Poppins',
-                        ),
-                        prefixIcon: Icon(Icons.person_outline,
-                            color: nuBlue, size: 20.sp),
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.w, vertical: 16.h),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: nuBlue, width: 2),
-                        ),
+                  // Username or Email Field
+                  TextFormField(
+                    controller: _identifierController,
+                    enabled: !_isLoading,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Username or Email',
+                      hintText: 'e.g. emilys or user@example.com',
+                      labelStyle: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13.sp,
+                        fontFamily: 'Poppins',
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your username';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: 16.h),
-
-                    // Password Field
-                    TextFormField(
-                      controller: _passwordController,
-                      enabled: !_isLoading,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        hintText: '••••••••••',
-                        labelStyle: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13.sp,
-                          fontFamily: 'Poppins',
-                        ),
-                        prefixIcon: Icon(Icons.lock_outline,
-                            color: nuBlue, size: 20.sp),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: Colors.grey.shade500,
-                            size: 20.sp,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.w, vertical: 16.h),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: nuBlue, width: 2),
-                        ),
+                      prefixIcon: Icon(Icons.person_outline,
+                          color: nuBlue, size: 20.sp),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 16.h),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: borderGrey),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
-                    ),
-                  ] else ...[
-                    // Firebase Email Field
-                    TextFormField(
-                      controller: _emailController,
-                      enabled: !_isLoading,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: 'Firebase Email',
-                        hintText: 'e.g. user@example.com',
-                        labelStyle: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13.sp,
-                          fontFamily: 'Poppins',
-                        ),
-                        prefixIcon: Icon(Icons.mail_outline,
-                            color: nuBlue, size: 20.sp),
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.w, vertical: 16.h),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: nuBlue, width: 2),
-                        ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: borderGrey),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your email address';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    SizedBox(height: 16.h),
-
-                    // Firebase Password Field
-                    TextFormField(
-                      controller: _firebasePasswordController,
-                      enabled: !_isLoading,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Firebase Password',
-                        hintText: '••••••••••',
-                        labelStyle: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13.sp,
-                          fontFamily: 'Poppins',
-                        ),
-                        prefixIcon: Icon(Icons.lock_outline,
-                            color: nuBlue, size: 20.sp),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: Colors.grey.shade500,
-                            size: 20.sp,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                            horizontal: 16.w, vertical: 16.h),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: borderGrey),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: const BorderSide(color: nuBlue, width: 2),
-                        ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: nuBlue, width: 2),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
-                        }
-                        return null;
-                      },
                     ),
-                  ],
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your username or email';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  SizedBox(height: 16.h),
+
+                  // Password Field
+                  TextFormField(
+                    controller: _passwordController,
+                    enabled: !_isLoading,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: '••••••••••',
+                      labelStyle: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13.sp,
+                        fontFamily: 'Poppins',
+                      ),
+                      prefixIcon:
+                          Icon(Icons.lock_outline, color: nuBlue, size: 20.sp),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: Colors.grey.shade500,
+                          size: 20.sp,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16.w, vertical: 16.h),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: borderGrey),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: borderGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r),
+                        borderSide: const BorderSide(color: nuBlue, width: 2),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      return null;
+                    },
+                  ),
 
                   SizedBox(height: 24.h),
 
-                  // Log In Submit Button
+                  // Unified Log In Submit Button
                   SizedBox(
                     height: 50.h,
                     child: ElevatedButton(
@@ -620,9 +344,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  _selectedLoginType == LoginType.dummyJson
-                                      ? 'Log In (DummyJSON)'
-                                      : 'Log In (Firebase)',
+                                  'Log In',
                                   style: TextStyle(
                                     fontSize: 15.sp,
                                     fontWeight: FontWeight.bold,
@@ -640,105 +362,105 @@ class _SignInScreenState extends State<SignInScreen> {
 
                   SizedBox(height: 20.h),
 
-                  // Conditional Section: Quick test accounts for DummyJSON vs Sign Up link for Firebase
-                  if (_selectedLoginType == LoginType.dummyJson) ...[
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 14.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        color: lightBg,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: borderGrey),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.vpn_key_outlined,
-                                  size: 16.sp, color: nuBlue),
-                              SizedBox(width: 6.w),
-                              CustomText(
-                                text: 'Quick Test Accounts:',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: nuBlue,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 8.h),
-                          Wrap(
-                            spacing: 8.w,
-                            runSpacing: 6.h,
-                            children: [
-                              ActionChip(
-                                avatar: const Icon(Icons.person,
-                                    size: 14, color: nuBlue),
-                                label: Text(
-                                  'emilys (User 1)',
-                                  style: TextStyle(
-                                      fontSize: 11.sp, fontFamily: 'Poppins'),
-                                ),
-                                backgroundColor: Colors.white,
-                                side: const BorderSide(color: borderGrey),
-                                onPressed: () => _fillSampleCredentials(
-                                    'emilys', 'emilyspass'),
-                              ),
-                              ActionChip(
-                                avatar: const Icon(Icons.person,
-                                    size: 14, color: nuBlue),
-                                label: Text(
-                                  'michaelw (User 2)',
-                                  style: TextStyle(
-                                      fontSize: 11.sp, fontFamily: 'Poppins'),
-                                ),
-                                backgroundColor: Colors.white,
-                                side: const BorderSide(color: borderGrey),
-                                onPressed: () => _fillSampleCredentials(
-                                    'michaelw', 'michaelwpass'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                  // Quick Test Accounts for DummyJSON
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14.w, vertical: 12.h),
+                    decoration: BoxDecoration(
+                      color: lightBg,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: borderGrey),
                     ),
-                  ] else ...[
-                    // Firebase Sign Up Link
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 14.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        color: lightBg,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: borderGrey),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          CustomText(
-                            text: "Don't have a Firebase account? ",
-                            fontSize: 12.sp,
-                            color: Colors.grey.shade700,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pushNamed('/signup');
-                            },
-                            child: Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.bold,
-                                color: nuBlue,
-                                fontFamily: 'Poppins',
-                                decoration: TextDecoration.underline,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.vpn_key_outlined,
+                                size: 16.sp, color: nuBlue),
+                            SizedBox(width: 6.w),
+                            CustomText(
+                              text: 'Quick Test Accounts:',
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: nuBlue,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Wrap(
+                          spacing: 8.w,
+                          runSpacing: 6.h,
+                          children: [
+                            ActionChip(
+                              avatar: const Icon(Icons.person,
+                                  size: 14, color: nuBlue),
+                              label: Text(
+                                'emilys (User 1)',
+                                style: TextStyle(
+                                    fontSize: 11.sp, fontFamily: 'Poppins'),
                               ),
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(color: borderGrey),
+                              onPressed: () => _fillSampleCredentials(
+                                  'emilys', 'emilyspass'),
+                            ),
+                            ActionChip(
+                              avatar: const Icon(Icons.person,
+                                  size: 14, color: nuBlue),
+                              label: Text(
+                                'michaelw (User 2)',
+                                style: TextStyle(
+                                    fontSize: 11.sp, fontFamily: 'Poppins'),
+                              ),
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(color: borderGrey),
+                              onPressed: () => _fillSampleCredentials(
+                                  'michaelw', 'michaelwpass'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 14.h),
+
+                  // Sign Up Link for Firebase
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14.w, vertical: 12.h),
+                    decoration: BoxDecoration(
+                      color: lightBg,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: borderGrey),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CustomText(
+                          text: "Don't have an account? ",
+                          fontSize: 12.sp,
+                          color: Colors.grey.shade700,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pushNamed('/signup');
+                          },
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: nuBlue,
+                              fontFamily: 'Poppins',
+                              decoration: TextDecoration.underline,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
